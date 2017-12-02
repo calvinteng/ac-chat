@@ -1,0 +1,73 @@
+<!doctype html>
+
+<head>
+    <title>A/C Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="../static/img/favicon.png" type="image/x-icon">
+</head>
+
+<body>
+    <h1 class="title" style="text-align: left">Chat Room: {{ room }}</h1>
+    <div class="chatbox" id="style-1"></div>
+    <div class="parent-container2">
+        <form name="message-area" method="POST">
+            <input type="message" class="message" placeholder="enter your message here..." autofocus>
+            <button class="send-button" type="submit">send</button>
+        </form>
+        <div class="container2">
+            <a style="width: 80%" class="button" href="#" onclick="leave_room();">Leave Room</a>
+            <a style="width: 80%" class="button" href="#" onclick="close_room();">Close Room</a>
+        </div>
+        <img style="float: right" src="../static/img/heh.png">
+    </div>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+<script>
+var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+//upon connecting, 'join' event in app.py is triggered
+//upon submitting form by hitting 'send' button, 'send_message' event inside app.py is triggered
+socket.on('connect', function() {
+    socket.emit('join', { user: '{{name}}', room: '{{room}}' })
+
+    var form = $('form[name="message-area"]').on('submit', function(e) {
+        e.preventDefault()
+        let user_input = $('input.message').val()
+        socket.emit('send_message', { username: '{{name}}', message: user_input, room: '{{room}}' })
+        $('input.message').val('').focus()
+    })
+})
+
+//status event that displays status message to chat box
+socket.on('status', function(data) {
+    $('div.chatbox').append('<div class="status-msg"><b>' + data.msg + '</b></div>')
+    $('div.chatbox').stop().animate({ scrollTop: $("div.chatbox")[0].scrollHeight })
+})
+
+//response event that displays a user's message to the chat box
+socket.on('response', function(msg) {
+    if (msg.username == '{{name}}') {
+        $('div.chatbox').append('<div class="chat-msg me"><b>' + msg.username + ':' + '</b> ' + msg.message + '</div>')
+    } else {
+        $('div.chatbox').append('<div class="chat-msg you"><b>' + msg.username + ':' + '</b> ' + msg.message + '</div>')
+    }
+    $('div.chatbox').stop().animate({ scrollTop: $("div.chatbox")[0].scrollHeight })
+})
+
+window.onbeforeunload = leave_room;
+
+function leave_room() {
+    socket.emit('leave', { user: '{{name}}', room: '{{room}}' })
+    socket.disconnect()
+    window.location.href = '{{ url_for('index') }}'
+}
+
+function close_room() {
+    socket.emit('close', { user: '{{name}}', room: '{{room}}' })
+    socket.disconnect()
+    window.location.href = '{{ url_for('index') }}'
+}
+</script>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>A/C Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="../static/img/favicon.png" type="image/x-icon">
+<body>
+    <h1 class="title">A/C Chat</h1>
+    <div class="parent-container">
+        <div class="container">
+            <!-- Flash message for invalid input -->
+            {% with messages = get_flashed_messages() %} {% if messages %}
+            <ul class="flashes">
+                {% for message in messages %}
+                <p>{{ message }}</p>
+                {% endfor %}
+            </ul>
+            {% endif %} {% endwith %}
+            <!-- client creates or joins a chat room with a chat username -->
+            <form name="create_room" method="POST">
+                <input type="chat_user" placeholder="chat username" name="chat_user" value="" autofocus>
+                <br>
+                <input type="chat_room" placeholder="chat room name" name="chat_room" value="">
+                <br>
+                <button class="button" type="submit">Enter Room</button>
+            </form>
+            <br>
+        </div>
+        <div class="logo-container">
+            <img src="../static/img/logo.png">
+        </div>
+    </div>
+    <br>
+    <br>
+    <!-- display list of available chat rooms -->
+    <table class='w3-table-all' style='width:60%'>
+        <thead>
+        <tr class="w3-blue-grey">
+            <th style="color:white">Room Name</th>
+            <th style="color:white">Users</th>
+        </tr>
+      </thead>
+        {% for r in chat_rooms %}
+        <tr>
+            <td> {{ r }} </td>
+            <td> {{ chat_rooms[r] }} </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+<script>
+var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+socket.on('connect', function() {
+    socket.emit('client_connected', {})
+})
+</script>
+
+</html>
